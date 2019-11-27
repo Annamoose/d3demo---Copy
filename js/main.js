@@ -46,9 +46,9 @@ function setMap(){
     .await(callback);
     
     function callback (error, csv, europe, france){
-        console.log("csv data", csv);
-        console.log("europe data", europe);
-        console.log("france data", france);
+ //       console.log("csv data", csv);
+//        console.log("europe data", europe);
+//        console.log("france data", france);
         
     setGraticule(map, path);
 
@@ -77,6 +77,9 @@ function setMap(){
         //add coordinated viz to the map in the form of a chart
         setChart(csv, colorScale);
         console.log("testChart");
+  
+        //create dropdown to select attributes
+        createDropdown(csv);
         
     }; //end of callback
     
@@ -198,8 +201,8 @@ function setChart(csv, colorScale){
     // chart frame dimensions set in global var
     //chart frame dimensions
     var chartWidth = window.innerWidth * 0.425,
-        chartHeight = 473,
-        leftPadding = 25,
+        chartHeight = 460,
+        leftPadding = 20,
         rightPadding = 2,
         topBottomPadding = 5,
         chartInnerWidth = chartWidth - leftPadding - rightPadding,
@@ -222,23 +225,25 @@ function setChart(csv, colorScale){
     
  // change yscale dynamically
     csvmax = d3.max(csv, function(d) { return parseFloat(d[expressed]); });
+    console.log(csvmax);
+    
     
     yScale = d3.scaleLinear()
-        .range([chartHeight - 10, 0])
-        .domain([0, csvmax * 1.1]);  //csv max value    
+        .range([0, chartHeight - 10])
+        .domain([0, csvmax ]);  //csv max value 
    
     //set bars for each province using linear y-scale and adjustable height accordign to values
-    var bars = d3.selectAll(".bar")
+    var bars = chart.selectAll(".bar")
         .data(csv)
         .enter()
         .append("rect")
         .sort(function(a,b){
-            return b[expressed]-a[expressed]
+            return a[expressed]-b[expressed]
         })
         .attr("class", function(d){
             return "bars " + d.adm1_code;
         })
-        .attr("width", chartInnerWidth / csv.length - 1)
+        .attr("width", chartWidth / csv.length - 1)
         .attr("x", function(d, i){
             return i * (chartWidth / csv.length);
         })
@@ -251,6 +256,7 @@ function setChart(csv, colorScale){
         .style("fill", function(d){
             return choropleth(d, colorScale);
         });    
+           console.log(yScale);
     
     var chartTitle = chart.append("text")
         .attr("x", 20)
@@ -258,6 +264,18 @@ function setChart(csv, colorScale){
         .attr("class", "chartTitle")
         .text("Number of variable " + expressed[3] + " in each region");
     
+/*    //Either choose axis generator or Numbers on bars
+    var yAxis = d3.axisLeft()
+        .scale(yScale)
+        .orient("left");
+    
+    //place axis
+    var axis = chart.append("g")
+        .attr("class", "axis")
+        .attr("transform", translate)
+        .call(yAxis);*/
+ 
+    //either choose numbers on bars or axis generator
     var numbers = chart.selectAll(".numbers")
         .data(csv)
         .enter()
@@ -281,5 +299,26 @@ function setChart(csv, colorScale){
         });
     
 };  //end of setChart
+    
+function createDropdown(csv) {
+    var dropdown = d3.select("body")
+        .append("select")
+        .attr("class", "dropdown");
+    
+    var initialOption = dropdown.append("option")
+        .attr("class", "initialOption")
+        .attr("disabled", "true")
+        .text("Select Attribute");
+    
+    //add attribute name options
+    var attOptions = dropdown.selectAll("attOptions")
+        .data(attrArray)
+        .enter()
+        .append("option")
+        .attr("value", function(d){ return d})
+        .text(function(d){ return d});
+    
+    
+}; //end of createDropdown
 
 })(); //last line of main.js
