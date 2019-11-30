@@ -149,6 +149,8 @@ function setEnumerationUnits(franceRegions, map, path, colorScale){
                 return "regions " + d.properties.adm1_code;
             })
             .attr("d", path)
+            .transition()
+            .duration(1000)
             .style("fill", function(d) {
                 return choropleth(d.properties, colorScale);
             });    
@@ -175,8 +177,6 @@ function makeColorScale(data){
         var val = parseFloat(data[i][expressed]);
         domainArray.push(val);
     }; //end of for loop
-    
-
     
     //cluster data
     var clusters = ss.ckmeans(domainArray, 5);
@@ -241,21 +241,6 @@ function setChart(csv, colorScale){
             return "bar " + d.adm1_code;
         })
         .attr("width", chartInnerWidth / csv.length - 1);
-/*
-        .attr("x", function(d, i){  //this part to end of this block could be removed once the updateChart function is working?
-            return i * (chartWidth / csv.length);
-        })
-        .attr("height", function(d){
-            return yScale(parseFloat(d[expressed]));
-        })
-        .attr("y", function(d){
-            return chartHeight - yScale(parseFloat(d[expressed]));
-        })
-        .style("fill", function(d){
-            return choropleth(d, colorScale);
-        });    
-*/
-
     
     var chartTitle = chart.append("text")
         .attr("x", 20)
@@ -275,7 +260,7 @@ function setChart(csv, colorScale){
         .call(yAxis);*/  //axis generator
  
     //either choose numbers on bars or axis generator
-/*    var numbers = chart.selectAll(".numbers")
+    var numbers = chart.selectAll(".numbers")
         .data(csv)
         .enter()
         .append("text")
@@ -295,14 +280,12 @@ function setChart(csv, colorScale){
         })
         .text(function(d){
             return d[expressed];
-        });*/
+        });
     
     //set bar position, heights and colors
     updateChart(bars, csv.length, colorScale);
     
 };  //end of setChart
- 
-
     
 function createDropdown(csv) {
     var dropdown = d3.select("body")
@@ -349,6 +332,11 @@ function changeAttribute(attribute, csv){
         .sort(function (a,b){  //re-sort bars
             return a[expressed] - b[expressed];
         })
+        .transition()
+        .delay(function(d,i){
+            return i * 20
+        })
+        .duration(500)
         .attr("x", function(d, i){
             return i * (chartInnerWidth / csv.length)+ leftPadding;
         })
