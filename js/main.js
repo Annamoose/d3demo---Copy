@@ -7,8 +7,20 @@
 var attrArray = ["varA", "varB", "varC","varD","varE"];
 var expressed  = attrArray[0];
 
-
+        //chart frame dimensions
+var chartWidth = window.innerWidth * 0.425,
+    chartHeight = 460,
+    leftPadding = 20,
+    rightPadding = 2,
+    topBottomPadding = 5,
+    chartInnerWidth = chartWidth - leftPadding - rightPadding,
+    chartInnerHeight = chartHeight - topBottomPadding * 2,
+    translate = "translate(" + leftPadding + "," + topBottomPadding + ")";
  
+    
+yScale = d3.scaleLinear()
+    .range([0,463])
+    .domain([0,110]);  //csv max value can't be used here as it's not defined yet    
 
 //begin script when window loads
 window.onload = setMap();
@@ -199,17 +211,7 @@ function choropleth(props, colorScale){
     
 function setChart(csv, colorScale){
     // chart frame dimensions set in global var
-    //chart frame dimensions
-    var chartWidth = window.innerWidth * 0.425,
-        chartHeight = 460,
-        leftPadding = 20,
-        rightPadding = 2,
-        topBottomPadding = 5,
-        chartInnerWidth = chartWidth - leftPadding - rightPadding,
-        chartInnerHeight = chartHeight - topBottomPadding * 2,
-        translate = "translate(" + leftPadding + "," + topBottomPadding + ")";
 
-    
     var chart = d3.select("body")
         .append("svg")
         .attr("width", chartWidth)
@@ -224,14 +226,9 @@ function setChart(csv, colorScale){
         .attr("transform", translate);   
     
  // change yscale dynamically
-    csvmax = d3.max(csv, function(d) { return parseFloat(d[expressed]); });
+    csvmax = d3.max(csv, function(d) {return           parseFloat(d[expressed]); });
     console.log(csvmax);
     
-    
-    yScale = d3.scaleLinear()
-        .range([0, chartHeight - 10])
-        .domain([0, csvmax ]);  //csv max value 
-   
     //set bars for each province using linear y-scale and adjustable height accordign to values
     var bars = chart.selectAll(".bar")
         .data(csv)
@@ -241,10 +238,11 @@ function setChart(csv, colorScale){
             return a[expressed]-b[expressed]
         })
         .attr("class", function(d){
-            return "bars " + d.adm1_code;
+            return "bar " + d.adm1_code;
         })
-        .attr("width", chartWidth / csv.length - 1)
-        .attr("x", function(d, i){
+        .attr("width", chartInnerWidth / csv.length - 1);
+/*
+        .attr("x", function(d, i){  //this part to end of this block could be removed once the updateChart function is working?
             return i * (chartWidth / csv.length);
         })
         .attr("height", function(d){
@@ -256,7 +254,8 @@ function setChart(csv, colorScale){
         .style("fill", function(d){
             return choropleth(d, colorScale);
         });    
-           console.log(yScale);
+*/
+
     
     var chartTitle = chart.append("text")
         .attr("x", 20)
@@ -273,10 +272,10 @@ function setChart(csv, colorScale){
     var axis = chart.append("g")
         .attr("class", "axis")
         .attr("transform", translate)
-        .call(yAxis);*/
+        .call(yAxis);*/  //axis generator
  
     //either choose numbers on bars or axis generator
-    var numbers = chart.selectAll(".numbers")
+/*    var numbers = chart.selectAll(".numbers")
         .data(csv)
         .enter()
         .append("text")
@@ -296,19 +295,31 @@ function setChart(csv, colorScale){
         })
         .text(function(d){
             return d[expressed];
-        });
+        });*/
+    
+    //set bar position, heights and colors
+    updateChart(bars, csv.length, colorScale);
     
 };  //end of setChart
+ 
+
     
 function createDropdown(csv) {
     var dropdown = d3.select("body")
         .append("select")
-        .attr("class", "dropdown");
+        .attr("class", "dropdown")
+        .on("change", function() {
+            changeAttribute(this.value, csv)
+        });
     
-    var initialOption = dropdown.append("option")
-        .attr("class", "initialOption")
+    //initial option in dropdown menu
+    var titleOption = dropdown.append("option")
+        .attr("class", "titleOption")
         .attr("disabled", "true")
-        .text("Select Attribute");
+        .text("Select Attribute")
+        .on("change", function(){
+            changeAttribute(this.value, csv)
+        });
     
     //add attribute name options
     var attOptions = dropdown.selectAll("attOptions")
@@ -320,5 +331,55 @@ function createDropdown(csv) {
     
     
 }; //end of createDropdown
+ 
+    //event listener for dropdown
+function changeAttribute(attribute, csv){
+    expressed = attribute;
+    
+    var colorScale = makeColorScale(csv);
+    
+    //recolor enumeration units on map
+    var regions = d3.selectAll(".regions")
+        .style("fill", function(d){
+        return choropleth(d.properties, colorScale)
+    });
+    
+    //resort, resize and recolor bars in chart
+    var bars = d3.selectAll(".bar")
+        .sort(function (a,b){  //re-sort bars
+            return a[expressed] - b[expressed];
+        })
+        .attr("x", function(d, i){
+            return i * (chartInnerWidth / csv.length)+ leftPadding;
+        })
+        .attr("height", function(d,i){  //re-size bars
+            return 463 - yScale(parseFloat(d[expressed]));
+        })
+        .attr("y", function(d,i){
+            return yScale(parseFloat(d[expressed]))+ topBottomPadding;
+        })
+        .style("fill", function(d){  //re-color bars
+            return choropleth(d, colorScale);
+        });
+    
+    updateChart(bars, csv.length, colorScale);
+    
+}; //end of changeAttribute   
+    
+function updateChart(bars, n, colorScale) {
+    bars.attr("x", function(d,i){
+            return i * (chartInnerWidth / n) + leftPadding;
+        })
+        .attr("height", function(d, i){
+            return 463 - yScale(parseFloat(d[expressed]));
+        })
+        .style("fill", function(d){
+        return choropleth(d, colorScale);
+        });
+    
+    var chartTitle = d3.select(".chartTitle")
+        .text("Number of variable " + expressed[3] + " in each region");
+    
+};  //end of updateChart
 
 })(); //last line of main.js
