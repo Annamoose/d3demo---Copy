@@ -245,7 +245,8 @@ function setChart(csv, colorScale){
         })
         .attr("width", chartInnerWidth / csv.length - 1)
         .on("mouseover", highlight)
-        .on("mouseout", dehighlight);
+        .on("mouseout", dehighlight)
+        .on("mousemove", moveLabel);
     
     var desc = bars.append("desc").text('{"stroke": "none", "stroke-width": "0px"}');
     
@@ -412,7 +413,7 @@ function highlight(props){
         .style("stroke", "yellow")
         .style("stroke-width", "2");
     
-/*    setLabel(props);*/  //this may not work, setLabel not defined yet
+    setLabel(props);  
     
 }; //end of highlight
     
@@ -440,7 +441,7 @@ function dehighlight(props){
 }  //end of dehighlight
     
 function setLabel(props){
-    var labelAttribute = "<h1>" + props[expressed]+"</h1>"+ expressed;
+    var labelAttribute = "<h2>" + props[expressed]+"</h2>"+ expressed;
     
     //create info label
     var infolabel = d3.select("body")

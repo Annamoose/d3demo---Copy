@@ -114,11 +114,11 @@ option {
     padding: 5px 10px;
 }
 
-.infolabel h5 {
+.infolabel h2 {
     margin: 0 20px 0 0;
     padding: 0px;
     display: inline-block;
-    line-height: 1em;
+    line-height: .5em;
 }
 
 .infolabel b {
@@ -129,7 +129,7 @@ option {
     display: inline-block;
     float: right;
     margin: -20px 0px 0px 20px;
-    font-size: 1em;
+    font-size: .75em;
     font-weight: bold;
     position: absolute;
 }
